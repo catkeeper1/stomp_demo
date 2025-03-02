@@ -15,11 +15,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		config.enableSimpleBroker("/app");
 		config.setApplicationDestinationPrefixes("/app");
+		config.setPreservePublishOrder(true);
 	}
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
+
 		registry.addEndpoint("/gs-guide-websocket");
+//		registry.setPreserveReceiveOrder(true);
 	}
 
 
@@ -27,4 +30,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.interceptors(new UserAuthenticationChannelInterceptor());
 	}
+
+
 }

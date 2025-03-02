@@ -16,7 +16,7 @@ public class UserAuthenticationChannelInterceptor implements ChannelInterceptor 
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String userId = System.currentTimeMillis() + "";
+            String userId = "username";//System.currentTimeMillis() + "";
             System.out.println("user id " + userId+" connected");
 
             accessor.setSessionAttributes(Collections.singletonMap("customizedAttribute", "1234"));

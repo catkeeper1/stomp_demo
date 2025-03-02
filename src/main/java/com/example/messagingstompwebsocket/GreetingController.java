@@ -37,7 +37,7 @@ public class GreetingController {
 		String sessionId = stompHeaderAccessor.getSessionId();
 		String subscriberName = stompHeaderAccessor.getNativeHeader("subscriberName").get(0);
 
-		customSubscriptionRegistry.setSubscriptionAttribute(sessionId, subId, "subscriberName", subscriberName);
+//		customSubscriptionRegistry.setSubscriptionAttribute(sessionId, subId, "subscriberName", subscriberName);
 
 		return new ArrayList<>();
 	}
@@ -46,34 +46,38 @@ public class GreetingController {
 //	@SendTo("/topic/greetings")
 	public Greeting greeting(HelloMessage message) throws Exception {
 
-		Set<SimpUser> userList = userRegistry.getUsers();
+		messagingTemplate.convertAndSend("/app/greetings",
+				new Greeting("Hello ---" + message.getName(), message.getName()),
+				Collections.singletonMap("receiverName", message.getName()));
 
-		userList.forEach( u -> {
-
-			System.out.println("---------------aa"+u.getName());
-
-			u.getSessions().forEach(simpSession -> {
-
-				simpSession.getSubscriptions().forEach(sub -> {
-
-					System.out.println("send msg to " + u.getName() + "----" + sub.getDestination() + "-----" + simpSession.getId() + "-----" + sub.getId());
-
-					Map<String, Object> headers = new HashMap<>();
-					headers.put("simpSessionId", simpSession.getId());
-					headers.put("simpSubscriptionId", sub.getId());
-
-
-					messagingTemplate.convertAndSend( sub.getDestination(), new Greeting("Hello ---" + u.getName()),
-							headers  );
-
-				});
-			});
-
-			//messagingTemplate.convertAndSend( "/topic/greetings", new Greeting("Hello ---" + u.getName()));
-		});
+//		Set<SimpUser> userList = userRegistry.getUsers();
+//
+//		userList.forEach( u -> {
+//
+//			System.out.println("---------------aa"+u.getName());
+//
+//			u.getSessions().forEach(simpSession -> {
+//
+//				simpSession.getSubscriptions().forEach(sub -> {
+//
+//					System.out.println("send msg to " + u.getName() + "----" + sub.getDestination() + "-----" + simpSession.getId() + "-----" + sub.getId());
+//
+//					Map<String, Object> headers = new HashMap<>();
+//					headers.put("simpSessionId", simpSession.getId());
+//					headers.put("simpSubscriptionId", sub.getId());
+//
+//
+//					messagingTemplate.convertAndSend( sub.getDestination(), new Greeting("Hello ---" + u.getName()),
+//							headers  );
+//
+//				});
+//			});
+//
+//			//messagingTemplate.convertAndSend( "/topic/greetings", new Greeting("Hello ---" + u.getName()));
+//		});
 
 		Thread.sleep(1000); // simulated delay
-		return new Greeting("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
+		return new Greeting("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!", "");
 	}
 
 }
