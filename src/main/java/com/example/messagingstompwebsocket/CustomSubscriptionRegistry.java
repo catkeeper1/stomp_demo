@@ -10,10 +10,76 @@ import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CustomSubscriptionRegistry extends DefaultSubscriptionRegistry {
+
+    private Map<String, Map<String, Map<String, Object>>> customizedSubscriptionCache = new ConcurrentHashMap<>();
+
+
+    public Map<String, Object> getSubscriptionAttributes(String sessionId , String subscriptionId) {
+        var session = customizedSubscriptionCache.get(sessionId);
+
+        if (session == null) {
+            return null;
+        }
+
+        var attributes = session.get(subscriptionId);
+
+        if (attributes == null) {
+            return null;
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.putAll(attributes);
+
+        return result;
+    }
+
+    public void setSubscriptionAttribute(String sessionId , String subscriptionId, String name, Object value) {
+        var attributes = customizedSubscriptionCache
+                .get(sessionId)
+                .get(subscriptionId);
+
+        attributes.put(name, value);
+    }
+
+    @Override
+    protected void addSubscriptionInternal(String sessionId, String subscriptionId, String destination, Message<?> message) {
+        super.addSubscriptionInternal(sessionId, subscriptionId, destination, message);
+        System.out.println("addSubscriptionInternal");
+
+        var session = customizedSubscriptionCache.computeIfAbsent(sessionId, (s) -> new HashMap<>());
+
+        session.computeIfAbsent(subscriptionId, (s) -> new HashMap<>());
+
+    }
+
+    @Override
+    protected void removeSubscriptionInternal(String sessionId, String subscriptionId, Message<?> message) {
+        super.removeSubscriptionInternal(sessionId, subscriptionId, message);
+        System.out.println("removeSubscriptionInternal");
+
+        var session = customizedSubscriptionCache.get(sessionId );
+
+        if (session == null) {
+            return;
+        }
+
+        session.remove(subscriptionId);
+
+    }
+
+    @Override
+    public void unregisterAllSubscriptions(String sessionId) {
+        super.unregisterAllSubscriptions(sessionId);
+        System.out.println("unregisterAllSubscriptions");
+
+        customizedSubscriptionCache.remove(sessionId);
+    }
 
     @Override
     protected MultiValueMap<String, String> findSubscriptionsInternal(String destination, Message<?> message) {
@@ -29,7 +95,7 @@ public class CustomSubscriptionRegistry extends DefaultSubscriptionRegistry {
     }
 
     @Configuration
-    public static class ConfigSubscriptionRegistory {
+    public static class ConfigSubscriptionRegistoryConfig {
         @Autowired
         AbstractBrokerMessageHandler simpleBrokerMessageHandler;
 

@@ -5,9 +5,9 @@ const stompClient = new StompJs.Client({
 stompClient.onConnect = (frame) => {
     setConnected(true);
     console.log('Connected: ' + frame);
-    stompClient.subscribe('/topic/greetings/', (greeting) => {
+    stompClient.subscribe('/app/greetings', (greeting) => {
         showGreeting(JSON.parse(greeting.body).content);
-    });
+    }, {"subscriberName":$("#name").val() });
 };
 
 stompClient.onWebSocketError = (error) => {
